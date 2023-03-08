@@ -50,7 +50,7 @@ close_app("Outlook")
 close_app("Discord")
 close_app("Teams")
 
-def end_task(Command):
+def end_task(command):
     if "shut down" in command:
         subprocess.call([sys.exit()])
 
