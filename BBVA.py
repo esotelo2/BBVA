@@ -1,60 +1,41 @@
 import speech_recognition as sr
-import subprocess
-import sys
+import appscript 
 
-# Initialize speech recognition
+# Define a function to handle opening apps
+def open_app(app_name):
+    appscript.app(app_name).activate()
+
+# Define a function to handle closing apps
+def close_app(app_name):
+    appscript.app(app_name).quit()
+
+# Initialize the speech recognition engine
 r = sr.Recognizer()
 
+# Define the microphone as the audio source
+mic = sr.Microphone()
 
-# Define a function to listen for voice commands
-def listen():
-    with sr.Microphone() as source:
-        r.adjust_for_ambient_noise(source, duration=1)
-        print("Im listening...")
+# Start listening for voice commands
+with mic as source:
+    r.adjust_for_ambient_noise(source)  # Reduce background noise
+    while True:
+        print("I'm listening...")
         audio = r.listen(source)
-    try:
-        command = r.recognize_google(audio).lower()
-        print("Command:", command)
-        return command
-    except sr.UnknownValueError:
-        print("Sorry, I did not understand that.")
-        return ""
-    except sr.RequestError:
-        print("Sorry, I could not connect to the service.")
-        return ""
+        print("Recognizing...")
+        try:
+            # Use Google's speech recognition service to convert audio to text
+            command = r.recognize_google(audio)
+            print("Command:", command)
 
-# Define a function to open applications based on voice commands
-def open_app(command):
-    if "open safari" in command:
-        subprocess.call(["open", "-a", "Safari"])
-    elif "open chrome" in command:
-        subprocess.call(["open", "-a", "Google Chrome"])
-    elif "open outlook" in command:
-        subprocess.call(["open", "-a", "Outlook"])
-    elif "open teams" in command:
-        subprocess.call(["open", "-a", "Teams"])
-    elif "open spotify" in command:
-        subprocess.call(["open", "-a", "Spotify"])
-    elif "open discord"in command:
-        subprocess.call(["open", "-a", "Discord"])
-    else:
-        print("Command not recognized.")
-# Define a function to close applications based on voice commands
-def close_app(app_name):
-    script = f'close"{app_name}" '
-    subprocess.run(['osascript', '-e', script])
+            # Parse the command and perform the corresponding action
+            if "open" in command:
+                app_name = command.split("open ")[1]
+                open_app(app_name)
+            elif "close" in command:
+                app_name = command.split("close ")[1]
+                close_app(app_name)
 
-close_app("Spotify")
-close_app("Google Chrome")
-close_app("Outlook")
-close_app("Discord")
-close_app("Teams")
-
-def end_task(command):
-    if "shut down" in command:
-        subprocess.call([sys.exit()])
-
-# Continuously listen for commands and open/closes applications
-while True:
-    command = listen()
-    open_app(command)
+        except sr.UnknownValueError:
+            print("Could not understand audio")
+        except sr.RequestError as e:
+            print("Could not request results from Google Speech Recognition service; {0}".format(e))
